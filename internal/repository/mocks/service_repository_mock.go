@@ -44,6 +44,7 @@ func (m *MockServiceRepository) Create(ctx context.Context, service *domain.Serv
 	now := time.Now()
 	service.CreatedAt = now
 	service.UpdatedAt = now
+	service.Revision = 1
 
 	m.services[service.ID.Hex()] = service
 	return nil
@@ -65,7 +66,7 @@ func (m *MockServiceRepository) GetByID(ctx context.Context, id string) (*domain
 	return service, nil
 }
 
-// Update updates an existing service
+// Update updates an existing service and increments revision
 func (m *MockServiceRepository) Update(ctx context.Context, service *domain.Service) error {
 	if m.UpdateFunc != nil {
 		return m.UpdateFunc(ctx, service)
@@ -80,6 +81,7 @@ func (m *MockServiceRepository) Update(ctx context.Context, service *domain.Serv
 	}
 
 	service.UpdatedAt = time.Now()
+	service.Revision++
 	m.services[id] = service
 	return nil
 }

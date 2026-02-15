@@ -42,19 +42,16 @@ func main() {
 
 	// Initialize repositories
 	serviceRepo := repository.NewMongoServiceRepository(db)
-	versionRepo := repository.NewMongoVersionRepository(db)
 
 	// Initialize services
-	serviceSvc := service.NewServiceService(serviceRepo, versionRepo)
-	versionSvc := service.NewVersionService(versionRepo, serviceRepo)
+	serviceSvc := service.NewServiceService(serviceRepo)
 
 	// Initialize handlers
 	serviceHandler := handler.NewServiceHandler(serviceSvc)
-	versionHandler := handler.NewVersionHandler(versionSvc)
 	healthHandler := handler.NewHealthHandler(mongoClient)
 
 	// Setup router
-	router := handler.NewRouter(cfg, serviceHandler, versionHandler, healthHandler)
+	router := handler.NewRouter(cfg, serviceHandler, healthHandler)
 
 	// Create HTTP server
 	srv := &http.Server{

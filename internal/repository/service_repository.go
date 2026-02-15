@@ -16,23 +16,22 @@ const servicesCollection = "services"
 
 // MongoServiceRepository implements domain.ServiceRepository using MongoDB
 type MongoServiceRepository struct {
-	db          *mongo.Database
-	collection  *mongo.Collection
-	versionColl *mongo.Collection
+	db         *mongo.Database
+	collection *mongo.Collection
 }
 
 // NewMongoServiceRepository creates a new MongoServiceRepository
 func NewMongoServiceRepository(db *mongo.Database) *MongoServiceRepository {
 	return &MongoServiceRepository{
-		db:          db,
-		collection:  db.Collection(servicesCollection),
-		versionColl: db.Collection(versionsCollection),
+		db:         db,
+		collection: db.Collection(servicesCollection),
 	}
 }
 
-// Create creates a new service
+// Create creates a new service with revision 1
 func (r *MongoServiceRepository) Create(ctx context.Context, service *domain.Service) error {
 	service.ID = primitive.NewObjectID()
+	service.Revision = 1
 	service.CreatedAt = time.Now()
 	service.UpdatedAt = time.Now()
 
@@ -40,7 +39,7 @@ func (r *MongoServiceRepository) Create(ctx context.Context, service *domain.Ser
 	return err
 }
 
-// GetByID retrieves a service by its ID, including version count
+// GetByID retrieves a service by its ID
 func (r *MongoServiceRepository) GetByID(ctx context.Context, id string) (*domain.Service, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -56,28 +55,26 @@ func (r *MongoServiceRepository) GetByID(ctx context.Context, id string) (*domai
 		return nil, err
 	}
 
-	// Get version count
-	count, err := r.versionColl.CountDocuments(ctx, bson.M{"service_id": objectID})
-	if err != nil {
-		return nil, err
-	}
-	service.VersionCount = int(count)
-
 	return &service, nil
 }
 
-// Update updates an existing service
+// Update updates an existing service and increments revision
 func (r *MongoServiceRepository) Update(ctx context.Context, service *domain.Service) error {
 	service.UpdatedAt = time.Now()
 
 	result, err := r.collection.UpdateOne(
 		ctx,
 		bson.M{"_id": service.ID},
-		bson.M{"$set": bson.M{
-			"name":        service.Name,
-			"description": service.Description,
-			"updated_at":  service.UpdatedAt,
-		}},
+		bson.M{
+			"$set": bson.M{
+				"name":        service.Name,
+				"description": service.Description,
+				"updated_at":  service.UpdatedAt,
+			},
+			"$inc": bson.M{
+				"revision": 1,
+			},
+		},
 	)
 	if err != nil {
 		return err
@@ -87,23 +84,19 @@ func (r *MongoServiceRepository) Update(ctx context.Context, service *domain.Ser
 		return domain.ErrNotFound
 	}
 
+	// Increment the revision in the struct to reflect the new value
+	service.Revision++
+
 	return nil
 }
 
-// Delete deletes a service by its ID and all associated versions
+// Delete deletes a service by its ID
 func (r *MongoServiceRepository) Delete(ctx context.Context, id string) error {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return domain.ErrInvalidID
 	}
 
-	// Delete all versions for this service
-	_, err = r.versionColl.DeleteMany(ctx, bson.M{"service_id": objectID})
-	if err != nil {
-		return err
-	}
-
-	// Delete the service
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	if err != nil {
 		return err
@@ -166,15 +159,6 @@ func (r *MongoServiceRepository) List(ctx context.Context, params domain.ListPar
 	var services []domain.Service
 	if err := cursor.All(ctx, &services); err != nil {
 		return nil, err
-	}
-
-	// Get version counts for each service
-	for i := range services {
-		count, err := r.versionColl.CountDocuments(ctx, bson.M{"service_id": services[i].ID})
-		if err != nil {
-			return nil, err
-		}
-		services[i].VersionCount = int(count)
 	}
 
 	return domain.NewPaginatedResult(services, total, params.Pagination), nil
