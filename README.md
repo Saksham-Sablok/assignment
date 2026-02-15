@@ -1,16 +1,17 @@
 # Services API
 
-A Go-based RESTful API for managing services and their versions. This API powers a service dashboard widget, allowing users to view, search, and navigate to services in their organization.
+A Go-based RESTful API for managing services with automatic revision tracking. This API powers a service dashboard widget, allowing users to view, search, and navigate to services in their organization.
 
 ## Features
 
 - Full CRUD operations for services
-- Version management for services
+- Automatic revision tracking (increments on every update)
 - Filtering, sorting, and pagination for service listings
 - API key authentication
 - MongoDB persistence with proper indexing
+- Swagger/OpenAPI documentation
 - Clean architecture with dependency injection
-- Comprehensive unit and integration tests
+- Comprehensive unit tests
 
 ## Prerequisites
 
@@ -22,6 +23,7 @@ A Go-based RESTful API for managing services and their versions. This API powers
 ```
 .
 ├── cmd/api/                    # Application entrypoint
+├── docs/                       # Generated Swagger documentation
 ├── internal/
 │   ├── domain/                 # Domain models and interfaces
 │   ├── handler/                # HTTP handlers (presentation layer)
@@ -85,6 +87,27 @@ curl http://localhost:8080/api/v1/services \
   -H "X-API-Key: test-api-key-123"
 ```
 
+## Swagger Documentation
+
+Interactive API documentation is available via Swagger UI:
+
+- **Swagger UI**: http://localhost:8080/swagger/index.html
+- **OpenAPI JSON**: http://localhost:8080/swagger/doc.json
+
+The Swagger UI allows you to explore and test all API endpoints directly from your browser.
+
+### Regenerating Swagger Docs
+
+If you modify the API annotations, regenerate the documentation:
+
+```bash
+# Install swag CLI (if not already installed)
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generate docs
+swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
+```
+
 ## Local Development Setup
 
 If you want to run without Docker:
@@ -138,6 +161,18 @@ curl -X POST http://localhost:8080/api/v1/services \
   -d '{"name": "payment-service", "description": "Handles payment processing"}'
 ```
 
+Response:
+```json
+{
+  "id": "507f1f77bcf86cd799439011",
+  "name": "payment-service",
+  "description": "Handles payment processing",
+  "revision": 1,
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
 #### List Services
 ```bash
 # Basic listing
@@ -171,6 +206,8 @@ curl -X PUT http://localhost:8080/api/v1/services/{id} \
   -d '{"name": "updated-name", "description": "Updated description"}'
 ```
 
+The revision is automatically incremented on every update.
+
 #### Update Service (Partial)
 ```bash
 curl -X PATCH http://localhost:8080/api/v1/services/{id} \
@@ -179,38 +216,42 @@ curl -X PATCH http://localhost:8080/api/v1/services/{id} \
   -d '{"name": "new-name"}'
 ```
 
+The revision is automatically incremented on every patch.
+
 #### Delete Service
 ```bash
 curl -X DELETE http://localhost:8080/api/v1/services/{id} \
   -H "X-API-Key: your-api-key"
 ```
 
-### Versions
+## Automatic Revision Tracking
 
-#### Create Version
+Each service has a `revision` field that tracks changes:
+
+- **On creation**: Revision starts at `1`
+- **On update (PUT/PATCH)**: Revision is atomically incremented using MongoDB's `$inc` operator
+
+This provides a simple way to track how many times a service has been modified without maintaining a separate version history.
+
+Example:
 ```bash
-curl -X POST http://localhost:8080/api/v1/services/{service_id}/versions \
+# Create a service (revision: 1)
+curl -X POST http://localhost:8080/api/v1/services \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{"version": "1.0.0"}'
-```
+  -H "X-API-Key: test-api-key-123" \
+  -d '{"name": "my-service", "description": "Initial description"}'
 
-#### List Versions
-```bash
-curl http://localhost:8080/api/v1/services/{service_id}/versions \
-  -H "X-API-Key: your-api-key"
-```
+# Update the service (revision: 2)
+curl -X PUT http://localhost:8080/api/v1/services/{id} \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: test-api-key-123" \
+  -d '{"name": "my-service", "description": "Updated description"}'
 
-#### Get Version
-```bash
-curl http://localhost:8080/api/v1/services/{service_id}/versions/{version_id} \
-  -H "X-API-Key: your-api-key"
-```
-
-#### Delete Version
-```bash
-curl -X DELETE http://localhost:8080/api/v1/services/{service_id}/versions/{version_id} \
-  -H "X-API-Key: your-api-key"
+# Patch the service (revision: 3)
+curl -X PATCH http://localhost:8080/api/v1/services/{id} \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: test-api-key-123" \
+  -d '{"description": "Another update"}'
 ```
 
 ## Testing
@@ -220,9 +261,9 @@ curl -X DELETE http://localhost:8080/api/v1/services/{service_id}/versions/{vers
 go test ./... -v
 ```
 
-### Run Integration Tests (requires Docker)
+### Run with Coverage
 ```bash
-go test ./... -tags=integration -v
+go test ./... -cover
 ```
 
 ## Development
@@ -248,8 +289,7 @@ All error responses follow this format:
 ```
 
 Error Codes:
-- `bad_request` (400): Invalid input
+- `bad_request` (400): Invalid input or validation error
 - `unauthorized` (401): Missing or invalid API key
 - `not_found` (404): Resource not found
-- `conflict` (409): Duplicate resource (e.g., duplicate version)
 - `internal_error` (500): Server error

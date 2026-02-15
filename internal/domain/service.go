@@ -18,12 +18,12 @@ type Service struct {
 
 // ServiceResponse is the API response format for a service
 type ServiceResponse struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Revision    int       `json:"revision"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          string    `json:"id" example:"507f1f77bcf86cd799439011"`
+	Name        string    `json:"name" example:"payment-service"`
+	Description string    `json:"description" example:"Handles payment processing"`
+	Revision    int       `json:"revision" example:"1"`
+	CreatedAt   time.Time `json:"created_at" example:"2024-01-15T10:30:00Z"`
+	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-15T10:30:00Z"`
 }
 
 // ToResponse converts a Service to its API response format
@@ -40,18 +40,18 @@ func (s *Service) ToResponse() ServiceResponse {
 
 // CreateServiceRequest represents the request body for creating a service
 type CreateServiceRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" example:"payment-service"`
+	Description string `json:"description" example:"Handles payment processing"`
 }
 
 // UpdateServiceRequest represents the request body for updating a service
 type UpdateServiceRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" example:"payment-service-v2"`
+	Description string `json:"description" example:"Updated payment processing service"`
 }
 
 // PatchServiceRequest represents the request body for partially updating a service
 type PatchServiceRequest struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name,omitempty" example:"new-service-name"`
+	Description *string `json:"description,omitempty" example:"Updated description"`
 }

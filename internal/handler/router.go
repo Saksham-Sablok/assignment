@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/services-api/pkg/auth"
 	"github.com/services-api/pkg/config"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // NewRouter creates and configures the Chi router with all routes
@@ -36,6 +37,11 @@ func NewRouter(
 
 	// Register health endpoint (no auth)
 	r.Get("/health", healthHandler.Check)
+
+	// Swagger documentation endpoint (no auth)
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	// Create auth middleware
 	authMiddleware := auth.NewMiddleware(cfg)
