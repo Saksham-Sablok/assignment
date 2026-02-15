@@ -62,9 +62,10 @@ func main() {
 
 	// Initialize repositories
 	serviceRepo := repository.NewMongoServiceRepository(db)
+	versionRepo := repository.NewMongoServiceVersionRepository(db)
 
 	// Initialize services
-	serviceSvc := service.NewServiceService(serviceRepo)
+	serviceSvc := service.NewServiceService(serviceRepo, versionRepo)
 
 	// Initialize handlers
 	serviceHandler := handler.NewServiceHandler(serviceSvc)

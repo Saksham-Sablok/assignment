@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  github_com_services-api_internal_domain.CreateServiceRequest:
+  domain.CreateServiceRequest:
     properties:
       description:
         example: Handles payment processing
@@ -9,7 +9,7 @@ definitions:
         example: payment-service
         type: string
     type: object
-  github_com_services-api_internal_domain.PaginationMetadata:
+  domain.PaginationMetadata:
     properties:
       limit:
         type: integer
@@ -20,7 +20,7 @@ definitions:
       total_pages:
         type: integer
     type: object
-  github_com_services-api_internal_domain.PatchServiceRequest:
+  domain.PatchServiceRequest:
     properties:
       description:
         example: Updated description
@@ -29,7 +29,7 @@ definitions:
         example: new-service-name
         type: string
     type: object
-  github_com_services-api_internal_domain.ServiceResponse:
+  domain.ServiceResponse:
     properties:
       created_at:
         example: "2024-01-15T10:30:00Z"
@@ -50,7 +50,28 @@ definitions:
         example: "2024-01-15T10:30:00Z"
         type: string
     type: object
-  github_com_services-api_internal_domain.UpdateServiceRequest:
+  domain.ServiceVersionResponse:
+    properties:
+      created_at:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      description:
+        example: Handles payment processing
+        type: string
+      id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        example: payment-service
+        type: string
+      revision:
+        example: 2
+        type: integer
+      service_id:
+        example: 507f1f77bcf86cd799439012
+        type: string
+    type: object
+  domain.UpdateServiceRequest:
     properties:
       description:
         example: Updated payment processing service
@@ -59,14 +80,7 @@ definitions:
         example: payment-service-v2
         type: string
     type: object
-  github_com_services-api_pkg_response.ErrorResponse:
-    properties:
-      error:
-        type: string
-      message:
-        type: string
-    type: object
-  internal_handler.HealthResponse:
+  handler.HealthResponse:
     properties:
       database:
         example: connected
@@ -75,14 +89,30 @@ definitions:
         example: healthy
         type: string
     type: object
-  internal_handler.ServiceListResponse:
+  handler.ServiceListResponse:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_services-api_internal_domain.ServiceResponse'
+          $ref: '#/definitions/domain.ServiceResponse'
         type: array
       pagination:
-        $ref: '#/definitions/github_com_services-api_internal_domain.PaginationMetadata'
+        $ref: '#/definitions/domain.PaginationMetadata'
+    type: object
+  handler.VersionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.ServiceVersionResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/domain.PaginationMetadata'
+    type: object
+  response.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -109,11 +139,11 @@ paths:
         "200":
           description: Service is healthy
           schema:
-            $ref: '#/definitions/internal_handler.HealthResponse'
+            $ref: '#/definitions/handler.HealthResponse'
         "503":
           description: Service is unhealthy
           schema:
-            $ref: '#/definitions/internal_handler.HealthResponse'
+            $ref: '#/definitions/handler.HealthResponse'
       summary: Health check
       tags:
       - health
@@ -157,19 +187,19 @@ paths:
         "200":
           description: List of services with pagination
           schema:
-            $ref: '#/definitions/internal_handler.ServiceListResponse'
+            $ref: '#/definitions/handler.ServiceListResponse'
         "400":
           description: Invalid parameters
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: List all services
@@ -186,26 +216,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_services-api_internal_domain.CreateServiceRequest'
+          $ref: '#/definitions/domain.CreateServiceRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created service
           schema:
-            $ref: '#/definitions/github_com_services-api_internal_domain.ServiceResponse'
+            $ref: '#/definitions/domain.ServiceResponse'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Create a new service
@@ -230,19 +260,19 @@ paths:
         "400":
           description: Invalid ID format
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Service not found
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Delete a service
@@ -264,23 +294,23 @@ paths:
         "200":
           description: Service details
           schema:
-            $ref: '#/definitions/github_com_services-api_internal_domain.ServiceResponse'
+            $ref: '#/definitions/domain.ServiceResponse'
         "400":
           description: Invalid ID format
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Service not found
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Get a service by ID
@@ -302,30 +332,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_services-api_internal_domain.PatchServiceRequest'
+          $ref: '#/definitions/domain.PatchServiceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Updated service
           schema:
-            $ref: '#/definitions/github_com_services-api_internal_domain.ServiceResponse'
+            $ref: '#/definitions/domain.ServiceResponse'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Service not found
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Partially update a service
@@ -347,35 +377,128 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_services-api_internal_domain.UpdateServiceRequest'
+          $ref: '#/definitions/domain.UpdateServiceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Updated service
           schema:
-            $ref: '#/definitions/github_com_services-api_internal_domain.ServiceResponse'
+            $ref: '#/definitions/domain.ServiceResponse'
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: Service not found
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/github_com_services-api_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update a service
       tags:
       - services
+  /services/{id}/versions:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all historical versions of a service
+      parameters:
+      - description: Service ID (MongoDB ObjectID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page (max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of versions with pagination
+          schema:
+            $ref: '#/definitions/handler.VersionListResponse'
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List all versions of a service
+      tags:
+      - versions
+  /services/{id}/versions/{revision}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific revision of a service
+      parameters:
+      - description: Service ID (MongoDB ObjectID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Revision number
+        in: path
+        name: revision
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Version details
+          schema:
+            $ref: '#/definitions/domain.ServiceVersionResponse'
+        "400":
+          description: Invalid ID or revision format
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Version not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a specific version of a service
+      tags:
+      - versions
 securityDefinitions:
   ApiKeyAuth:
     in: header

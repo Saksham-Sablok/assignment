@@ -61,6 +61,12 @@ func NewRouter(
 				r.Put("/", serviceHandler.Update)
 				r.Patch("/", serviceHandler.Patch)
 				r.Delete("/", serviceHandler.Delete)
+
+				// Version routes
+				r.Route("/versions", func(r chi.Router) {
+					r.Get("/", serviceHandler.ListVersions)
+					r.Get("/{revision}", serviceHandler.GetVersion)
+				})
 			})
 		})
 	})

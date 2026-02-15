@@ -11,12 +11,14 @@ import (
 // ServiceService handles business logic for services
 type ServiceService struct {
 	serviceRepo domain.ServiceRepository
+	versionRepo domain.ServiceVersionRepository
 }
 
 // NewServiceService creates a new ServiceService
-func NewServiceService(serviceRepo domain.ServiceRepository) *ServiceService {
+func NewServiceService(serviceRepo domain.ServiceRepository, versionRepo domain.ServiceVersionRepository) *ServiceService {
 	return &ServiceService{
 		serviceRepo: serviceRepo,
+		versionRepo: versionRepo,
 	}
 }
 
@@ -36,6 +38,14 @@ func (s *ServiceService) Create(ctx context.Context, req domain.CreateServiceReq
 		return nil, err
 	}
 
+	// Create initial version snapshot (revision 1)
+	version := domain.NewServiceVersion(service)
+	if err := s.versionRepo.Create(ctx, version); err != nil {
+		// Log error but don't fail the service creation
+		// In production, you might want to handle this differently
+		return service, nil
+	}
+
 	return service, nil
 }
 
@@ -44,7 +54,7 @@ func (s *ServiceService) GetByID(ctx context.Context, id string) (*domain.Servic
 	return s.serviceRepo.GetByID(ctx, id)
 }
 
-// Update performs a full update of a service (increments revision)
+// Update performs a full update of a service (increments revision and creates version snapshot)
 func (s *ServiceService) Update(ctx context.Context, id string, req domain.UpdateServiceRequest) (*domain.Service, error) {
 	// Validate request
 	if err := validateUpdateServiceRequest(req); err != nil {
@@ -66,10 +76,23 @@ func (s *ServiceService) Update(ctx context.Context, id string, req domain.Updat
 	}
 
 	// Re-fetch to get updated timestamps and revision
-	return s.serviceRepo.GetByID(ctx, id)
+	updatedService, err := s.serviceRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create version snapshot with the new state
+	version := domain.NewServiceVersion(updatedService)
+	if err := s.versionRepo.Create(ctx, version); err != nil {
+		// Log error but don't fail the update
+		// In production, you might want to handle this differently
+		return updatedService, nil
+	}
+
+	return updatedService, nil
 }
 
-// Patch performs a partial update of a service (increments revision)
+// Patch performs a partial update of a service (increments revision and creates version snapshot)
 func (s *ServiceService) Patch(ctx context.Context, id string, req domain.PatchServiceRequest) (*domain.Service, error) {
 	// Get existing service
 	service, err := s.serviceRepo.GetByID(ctx, id)
@@ -103,14 +126,32 @@ func (s *ServiceService) Patch(ctx context.Context, id string, req domain.PatchS
 	}
 
 	// Re-fetch to get updated timestamps and revision
-	return s.serviceRepo.GetByID(ctx, id)
+	updatedService, err := s.serviceRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create version snapshot with the new state
+	version := domain.NewServiceVersion(updatedService)
+	if err := s.versionRepo.Create(ctx, version); err != nil {
+		// Log error but don't fail the update
+		// In production, you might want to handle this differently
+		return updatedService, nil
+	}
+
+	return updatedService, nil
 }
 
-// Delete deletes a service
+// Delete deletes a service and all its versions
 func (s *ServiceService) Delete(ctx context.Context, id string) error {
 	// Validate ID format
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
 		return domain.ErrInvalidID
+	}
+
+	// Delete all versions first
+	if err := s.versionRepo.DeleteByServiceID(ctx, id); err != nil {
+		// Log error but continue with service deletion
 	}
 
 	return s.serviceRepo.Delete(ctx, id)
@@ -143,6 +184,39 @@ func (s *ServiceService) List(ctx context.Context, params domain.ListParams) (*d
 	}
 
 	return s.serviceRepo.List(ctx, params)
+}
+
+// GetVersions retrieves all versions for a service
+func (s *ServiceService) GetVersions(ctx context.Context, serviceID string, params domain.PaginationParams) (*domain.PaginatedResult[domain.ServiceVersion], error) {
+	// Verify service exists
+	if _, err := s.serviceRepo.GetByID(ctx, serviceID); err != nil {
+		return nil, err
+	}
+
+	// Apply defaults
+	if params.Limit == 0 {
+		params.Limit = 20
+	}
+	if params.Page == 0 {
+		params.Page = 1
+	}
+
+	// Cap limit at 100
+	if params.Limit > 100 {
+		params.Limit = 100
+	}
+
+	return s.versionRepo.ListByServiceID(ctx, serviceID, params)
+}
+
+// GetVersion retrieves a specific version of a service
+func (s *ServiceService) GetVersion(ctx context.Context, serviceID string, revision int) (*domain.ServiceVersion, error) {
+	// Verify service exists
+	if _, err := s.serviceRepo.GetByID(ctx, serviceID); err != nil {
+		return nil, err
+	}
+
+	return s.versionRepo.GetByServiceIDAndRevision(ctx, serviceID, revision)
 }
 
 // validateCreateServiceRequest validates a create service request

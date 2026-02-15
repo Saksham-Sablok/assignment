@@ -19,11 +19,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func setupServiceHandler() (*handler.ServiceHandler, *mocks.MockServiceRepository) {
+func setupServiceHandler() (*handler.ServiceHandler, *mocks.MockServiceRepository, *mocks.MockServiceVersionRepository) {
 	serviceRepo := mocks.NewMockServiceRepository()
-	svc := service.NewServiceService(serviceRepo)
+	versionRepo := mocks.NewMockServiceVersionRepository()
+	svc := service.NewServiceService(serviceRepo, versionRepo)
 	h := handler.NewServiceHandler(svc)
-	return h, serviceRepo
+	return h, serviceRepo, versionRepo
 }
 
 func TestServiceHandler_Create(t *testing.T) {
@@ -67,7 +68,7 @@ func TestServiceHandler_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, _ := setupServiceHandler()
+			h, _, _ := setupServiceHandler()
 
 			var body []byte
 			if str, ok := tt.requestBody.(string); ok {
@@ -124,7 +125,7 @@ func TestServiceHandler_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, serviceRepo := setupServiceHandler()
+			h, serviceRepo, _ := setupServiceHandler()
 			id := tt.setupRepo(serviceRepo)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/services/"+id, nil)
@@ -204,7 +205,7 @@ func TestServiceHandler_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, serviceRepo := setupServiceHandler()
+			h, serviceRepo, _ := setupServiceHandler()
 			id := tt.setupRepo(serviceRepo)
 
 			body, _ := json.Marshal(tt.requestBody)
@@ -262,7 +263,7 @@ func TestServiceHandler_Patch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, serviceRepo := setupServiceHandler()
+			h, serviceRepo, _ := setupServiceHandler()
 			id := tt.setupRepo(serviceRepo)
 
 			body, _ := json.Marshal(tt.requestBody)
@@ -318,7 +319,7 @@ func TestServiceHandler_Delete(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, serviceRepo := setupServiceHandler()
+			h, serviceRepo, _ := setupServiceHandler()
 			id := tt.setupRepo(serviceRepo)
 
 			req := httptest.NewRequest(http.MethodDelete, "/api/v1/services/"+id, nil)
@@ -389,7 +390,7 @@ func TestServiceHandler_List(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, serviceRepo := setupServiceHandler()
+			h, serviceRepo, _ := setupServiceHandler()
 			tt.setupRepo(serviceRepo)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/services"+tt.query, nil)
