@@ -13,7 +13,27 @@ import (
 	"github.com/services-api/internal/repository"
 	"github.com/services-api/internal/service"
 	"github.com/services-api/pkg/config"
+
+	_ "github.com/services-api/docs" // Swagger docs
 )
+
+// @title Services API
+// @version 1.0
+// @description RESTful API for managing services in an organization. Supports CRUD operations with automatic revision tracking.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@services-api.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
 
 func main() {
 	// Load configuration
