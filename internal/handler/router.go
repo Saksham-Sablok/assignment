@@ -8,14 +8,18 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/services-api/pkg/auth"
 	"github.com/services-api/pkg/config"
+	"github.com/services-api/pkg/jwt"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // NewRouter creates and configures the Chi router with all routes
 func NewRouter(
 	cfg *config.Config,
+	jwtManager *jwt.Manager,
 	serviceHandler *ServiceHandler,
 	healthHandler *HealthHandler,
+	authHandler *AuthHandler,
+	userHandler *UserHandler,
 ) http.Handler {
 	r := chi.NewRouter()
 
@@ -44,28 +48,51 @@ func NewRouter(
 	))
 
 	// Create auth middleware
-	authMiddleware := auth.NewMiddleware(cfg)
+	authMiddleware := auth.NewMiddleware(cfg, jwtManager)
 
-	// Register /api/v1 routes with auth middleware
+	// Register /api/v1 routes
 	r.Route("/api/v1", func(r chi.Router) {
-		// Apply auth middleware to all /api/v1 routes
-		r.Use(authMiddleware.Authenticate)
+		// Public auth routes (no authentication required)
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", authHandler.Register)
+			r.Post("/login", authHandler.Login)
+			r.Post("/refresh", authHandler.Refresh)
+		})
 
-		// Service routes
-		r.Route("/services", func(r chi.Router) {
-			r.Post("/", serviceHandler.Create)
-			r.Get("/", serviceHandler.List)
+		// Protected routes (require authentication)
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware.Authenticate)
 
-			r.Route("/{id}", func(r chi.Router) {
-				r.Get("/", serviceHandler.Get)
-				r.Put("/", serviceHandler.Update)
-				r.Patch("/", serviceHandler.Patch)
-				r.Delete("/", serviceHandler.Delete)
+			// User routes
+			r.Route("/users", func(r chi.Router) {
+				r.Get("/me", userHandler.GetMe)
+				r.Post("/me/password", userHandler.ChangePassword)
+				r.Post("/", userHandler.Create)
+				r.Get("/", userHandler.List)
 
-				// Version routes
-				r.Route("/versions", func(r chi.Router) {
-					r.Get("/", serviceHandler.ListVersions)
-					r.Get("/{revision}", serviceHandler.GetVersion)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", userHandler.Get)
+					r.Put("/", userHandler.Update)
+					r.Delete("/", userHandler.Delete)
+				})
+			})
+
+			// Service routes
+			r.Route("/services", func(r chi.Router) {
+				r.Post("/", serviceHandler.Create)
+				r.Get("/", serviceHandler.List)
+
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", serviceHandler.Get)
+					r.Put("/", serviceHandler.Update)
+					r.Patch("/", serviceHandler.Patch)
+					r.Delete("/", serviceHandler.Delete)
+
+					// Version routes
+					r.Route("/versions", func(r chi.Router) {
+						r.Get("/", serviceHandler.ListVersions)
+						r.Get("/{revision}", serviceHandler.GetVersion)
+					})
 				})
 			})
 		})

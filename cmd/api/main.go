@@ -13,13 +13,14 @@ import (
 	"github.com/services-api/internal/repository"
 	"github.com/services-api/internal/service"
 	"github.com/services-api/pkg/config"
+	"github.com/services-api/pkg/jwt"
 
 	_ "github.com/services-api/docs" // Swagger docs
 )
 
 // @title Services API
 // @version 1.0
-// @description RESTful API for managing services in an organization. Supports CRUD operations with automatic revision tracking.
+// @description RESTful API for managing services in an organization. Supports CRUD operations with automatic revision tracking and user authentication.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -34,6 +35,11 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name X-API-Key
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter your bearer token in the format: Bearer <token>
 
 func main() {
 	// Load configuration
@@ -60,19 +66,32 @@ func main() {
 		log.Fatalf("Failed to create indexes: %v", err)
 	}
 
+	// Initialize JWT manager
+	jwtManager := jwt.NewManager(
+		cfg.JWTSecret,
+		cfg.JWTAccessExpiry,
+		cfg.JWTRefreshExpiry,
+		cfg.JWTIssuer,
+	)
+
 	// Initialize repositories
 	serviceRepo := repository.NewMongoServiceRepository(db)
 	versionRepo := repository.NewMongoServiceVersionRepository(db)
+	userRepo := repository.NewMongoUserRepository(db)
 
 	// Initialize services
 	serviceSvc := service.NewServiceService(serviceRepo, versionRepo)
+	authSvc := service.NewAuthService(userRepo, jwtManager)
+	userSvc := service.NewUserService(userRepo)
 
 	// Initialize handlers
 	serviceHandler := handler.NewServiceHandler(serviceSvc)
 	healthHandler := handler.NewHealthHandler(mongoClient)
+	authHandler := handler.NewAuthHandler(authSvc)
+	userHandler := handler.NewUserHandler(userSvc)
 
 	// Setup router
-	router := handler.NewRouter(cfg, serviceHandler, healthHandler)
+	router := handler.NewRouter(cfg, jwtManager, serviceHandler, healthHandler, authHandler, userHandler)
 
 	// Create HTTP server
 	srv := &http.Server{

@@ -38,6 +38,16 @@ func NotFound(w http.ResponseWriter, message string) {
 	Error(w, http.StatusNotFound, "not_found", message)
 }
 
+// Unauthorized writes a 401 error response
+func Unauthorized(w http.ResponseWriter, message string) {
+	Error(w, http.StatusUnauthorized, "unauthorized", message)
+}
+
+// Forbidden writes a 403 error response
+func Forbidden(w http.ResponseWriter, message string) {
+	Error(w, http.StatusForbidden, "forbidden", message)
+}
+
 // Conflict writes a 409 error response
 func Conflict(w http.ResponseWriter, message string) {
 	Error(w, http.StatusConflict, "conflict", message)

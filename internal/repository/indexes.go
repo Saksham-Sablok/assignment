@@ -60,5 +60,18 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 	}
 	log.Println("Created index on service_versions.service_id")
 
+	// Users collection indexes
+	usersCollection := db.Collection("users")
+
+	// Unique index on email for user lookup and preventing duplicates
+	_, err = usersCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return err
+	}
+	log.Println("Created unique index on users.email")
+
 	return nil
 }

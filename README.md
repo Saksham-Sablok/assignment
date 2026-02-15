@@ -7,7 +7,10 @@ A Go-based RESTful API for managing services with automatic revision tracking. T
 - Full CRUD operations for services
 - Automatic revision tracking (increments on every update)
 - Filtering, sorting, and pagination for service listings
-- API key authentication
+- **Dual authentication support:**
+  - JWT-based authentication (username/password) with access and refresh tokens
+  - API key authentication for programmatic/service-to-service access
+- User management with role-based access control (user/admin roles)
 - MongoDB persistence with proper indexing
 - Swagger/OpenAPI documentation
 - Clean architecture with dependency injection
@@ -33,6 +36,7 @@ A Go-based RESTful API for managing services with automatic revision tracking. T
 └── pkg/
     ├── auth/                   # Authentication middleware
     ├── config/                 # Configuration management
+    ├── jwt/                    # JWT token management
     └── response/              # HTTP response helpers
 ```
 
@@ -44,6 +48,10 @@ A Go-based RESTful API for managing services with automatic revision tracking. T
 | `DB_NAME` | Database name | `services_db` |
 | `PORT` | API server port | `8080` |
 | `API_KEYS` | Comma-separated list of valid API keys | (none) |
+| `JWT_SECRET` | Secret key for signing JWT tokens | (required for JWT auth) |
+| `JWT_ACCESS_EXPIRY` | Access token expiry duration | `15m` |
+| `JWT_REFRESH_EXPIRY` | Refresh token expiry duration | `168h` (7 days) |
+| `JWT_ISSUER` | JWT issuer claim | `services-api` |
 
 ## Quick Start with Docker Compose
 
@@ -134,6 +142,10 @@ If you want to run without Docker:
    export DB_NAME=services_db
    export PORT=8080
    export API_KEYS=my-api-key
+   export JWT_SECRET=your-secret-key-for-development
+   export JWT_ACCESS_EXPIRY=15m
+   export JWT_REFRESH_EXPIRY=168h
+   export JWT_ISSUER=services-api
    ```
 
 5. Run the API:
@@ -149,9 +161,139 @@ GET /health
 ```
 No authentication required.
 
+### Authentication
+
+The API supports two authentication methods:
+1. **JWT Authentication**: For user-based access with role-based permissions
+2. **API Key Authentication**: For programmatic/service-to-service access
+
+#### Register a New User
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securepassword123",
+    "first_name": "John",
+    "last_name": "Doe"
+  }'
+```
+
+Response:
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "Bearer",
+  "expires_in": 900,
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "user",
+    "active": true,
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+#### Login
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securepassword123"
+  }'
+```
+
+#### Refresh Token
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "eyJhbGciOiJIUzI1NiIs..."
+  }'
+```
+
+#### Using JWT Authentication
+Include the access token in the `Authorization` header:
+```bash
+curl http://localhost:8080/api/v1/services \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
+```
+
+#### Using API Key Authentication
+Include the API key in the `X-API-Key` header:
+```bash
+curl http://localhost:8080/api/v1/services \
+  -H "X-API-Key: your-api-key"
+```
+
+### User Management
+
+#### Get Current User Profile
+```bash
+curl http://localhost:8080/api/v1/users/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+#### Change Password
+```bash
+curl -X POST http://localhost:8080/api/v1/users/me/password \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "current_password": "oldpassword123",
+    "new_password": "newpassword123"
+  }'
+```
+
+#### Admin: Create User
+```bash
+curl -X POST http://localhost:8080/api/v1/users \
+  -H "Authorization: Bearer <admin_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "password": "securepassword123",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "role": "user"
+  }'
+```
+
+#### Admin: List Users
+```bash
+curl "http://localhost:8080/api/v1/users?page=1&limit=20" \
+  -H "Authorization: Bearer <admin_access_token>"
+```
+
+#### Admin: Update User
+```bash
+curl -X PUT http://localhost:8080/api/v1/users/{id} \
+  -H "Authorization: Bearer <admin_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "updated@example.com",
+    "first_name": "Jane",
+    "last_name": "Doe",
+    "role": "admin",
+    "active": true
+  }'
+```
+
+#### Admin: Delete User
+```bash
+curl -X DELETE http://localhost:8080/api/v1/users/{id} \
+  -H "Authorization: Bearer <admin_access_token>"
+```
+
 ### Services
 
-All `/api/v1/*` endpoints require the `X-API-Key` header.
+All `/api/v1/services/*` endpoints require authentication (JWT Bearer token or API key).
 
 #### Create Service
 ```bash
@@ -290,6 +432,16 @@ All error responses follow this format:
 
 Error Codes:
 - `bad_request` (400): Invalid input or validation error
-- `unauthorized` (401): Missing or invalid API key
+- `unauthorized` (401): Missing or invalid credentials (API key or JWT token)
+- `forbidden` (403): Authenticated but not authorized for this action
 - `not_found` (404): Resource not found
 - `internal_error` (500): Server error
+
+## User Roles
+
+The API supports two user roles:
+
+| Role | Permissions |
+|------|-------------|
+| `user` | Can manage their own profile, change password, access services |
+| `admin` | All user permissions + create/read/update/delete any user |

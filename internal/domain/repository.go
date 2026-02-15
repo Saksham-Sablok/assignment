@@ -37,3 +37,27 @@ type ServiceVersionRepository interface {
 	// DeleteByServiceID deletes all versions for a service
 	DeleteByServiceID(ctx context.Context, serviceID string) error
 }
+
+// UserRepository defines the interface for user data access
+type UserRepository interface {
+	// Create creates a new user
+	Create(ctx context.Context, user *User) error
+
+	// GetByID retrieves a user by their ID
+	GetByID(ctx context.Context, id string) (*User, error)
+
+	// GetByEmail retrieves a user by their email
+	GetByEmail(ctx context.Context, email string) (*User, error)
+
+	// Update updates an existing user
+	Update(ctx context.Context, user *User) error
+
+	// Delete deletes a user by their ID
+	Delete(ctx context.Context, id string) error
+
+	// List retrieves users with pagination
+	List(ctx context.Context, params PaginationParams) (*PaginatedResult[User], error)
+
+	// ExistsByEmail checks if a user with the given email exists
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
+}
