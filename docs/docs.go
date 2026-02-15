@@ -40,13 +40,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Service is healthy",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.HealthResponse"
+                            "$ref": "#/definitions/handler.HealthResponse"
                         }
                     },
                     "503": {
                         "description": "Service is unhealthy",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.HealthResponse"
+                            "$ref": "#/definitions/handler.HealthResponse"
                         }
                     }
                 }
@@ -116,25 +116,25 @@ const docTemplate = `{
                     "200": {
                         "description": "List of services with pagination",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ServiceListResponse"
+                            "$ref": "#/definitions/handler.ServiceListResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid parameters",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -163,7 +163,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.CreateServiceRequest"
+                            "$ref": "#/definitions/domain.CreateServiceRequest"
                         }
                     }
                 ],
@@ -171,25 +171,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created service",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.ServiceResponse"
+                            "$ref": "#/definitions/domain.ServiceResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -226,31 +226,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Service details",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.ServiceResponse"
+                            "$ref": "#/definitions/domain.ServiceResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid ID format",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -286,7 +286,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.UpdateServiceRequest"
+                            "$ref": "#/definitions/domain.UpdateServiceRequest"
                         }
                     }
                 ],
@@ -294,31 +294,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated service",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.ServiceResponse"
+                            "$ref": "#/definitions/domain.ServiceResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -356,25 +356,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid ID format",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -410,7 +410,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.PatchServiceRequest"
+                            "$ref": "#/definitions/domain.PatchServiceRequest"
                         }
                     }
                 ],
@@ -418,31 +418,174 @@ const docTemplate = `{
                     "200": {
                         "description": "Updated service",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_internal_domain.ServiceResponse"
+                            "$ref": "#/definitions/domain.ServiceResponse"
                         }
                     },
                     "400": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Service not found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_services-api_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/services/{id}/versions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of all historical versions of a service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "versions"
+                ],
+                "summary": "List all versions of a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID (MongoDB ObjectID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page (max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of versions with pagination",
+                        "schema": {
+                            "$ref": "#/definitions/handler.VersionListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID format",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/services/{id}/versions/{revision}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific revision of a service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "versions"
+                ],
+                "summary": "Get a specific version of a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service ID (MongoDB ObjectID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Revision number",
+                        "name": "revision",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Version details",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ServiceVersionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID or revision format",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     }
                 }
@@ -450,7 +593,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_services-api_internal_domain.CreateServiceRequest": {
+        "domain.CreateServiceRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -463,7 +606,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_services-api_internal_domain.PaginationMetadata": {
+        "domain.PaginationMetadata": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -480,7 +623,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_services-api_internal_domain.PatchServiceRequest": {
+        "domain.PatchServiceRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -493,7 +636,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_services-api_internal_domain.ServiceResponse": {
+        "domain.ServiceResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -522,7 +665,36 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_services-api_internal_domain.UpdateServiceRequest": {
+        "domain.ServiceVersionResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Handles payment processing"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439011"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "payment-service"
+                },
+                "revision": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "service_id": {
+                    "type": "string",
+                    "example": "507f1f77bcf86cd799439012"
+                }
+            }
+        },
+        "domain.UpdateServiceRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -535,18 +707,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_services-api_pkg_response.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handler.HealthResponse": {
+        "handler.HealthResponse": {
             "type": "object",
             "properties": {
                 "database": {
@@ -559,17 +720,42 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.ServiceListResponse": {
+        "handler.ServiceListResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_services-api_internal_domain.ServiceResponse"
+                        "$ref": "#/definitions/domain.ServiceResponse"
                     }
                 },
                 "pagination": {
-                    "$ref": "#/definitions/github_com_services-api_internal_domain.PaginationMetadata"
+                    "$ref": "#/definitions/domain.PaginationMetadata"
+                }
+            }
+        },
+        "handler.VersionListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ServiceVersionResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/domain.PaginationMetadata"
+                }
+            }
+        },
+        "response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         }

@@ -64,7 +64,8 @@ func TestServiceService_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			serviceRepo := mocks.NewMockServiceRepository()
-			svc := service.NewServiceService(serviceRepo)
+			versionRepo := mocks.NewMockServiceVersionRepository()
+			svc := service.NewServiceService(serviceRepo, versionRepo)
 
 			ctx := context.Background()
 			result, err := svc.Create(ctx, tt.req)
@@ -115,7 +116,8 @@ func TestServiceService_GetByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serviceRepo := mocks.NewMockServiceRepository()
 			tt.setupRepo(serviceRepo)
-			svc := service.NewServiceService(serviceRepo)
+			versionRepo := mocks.NewMockServiceVersionRepository()
+			svc := service.NewServiceService(serviceRepo, versionRepo)
 
 			ctx := context.Background()
 
@@ -210,7 +212,8 @@ func TestServiceService_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serviceRepo := mocks.NewMockServiceRepository()
 			id := tt.setupRepo(serviceRepo)
-			svc := service.NewServiceService(serviceRepo)
+			versionRepo := mocks.NewMockServiceVersionRepository()
+			svc := service.NewServiceService(serviceRepo, versionRepo)
 
 			ctx := context.Background()
 			result, err := svc.Update(ctx, id, tt.req)
@@ -306,7 +309,8 @@ func TestServiceService_Patch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serviceRepo := mocks.NewMockServiceRepository()
 			id := tt.setupRepo(serviceRepo)
-			svc := service.NewServiceService(serviceRepo)
+			versionRepo := mocks.NewMockServiceVersionRepository()
+			svc := service.NewServiceService(serviceRepo, versionRepo)
 
 			ctx := context.Background()
 			result, err := svc.Patch(ctx, id, tt.req)
@@ -362,7 +366,8 @@ func TestServiceService_Delete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serviceRepo := mocks.NewMockServiceRepository()
 			id := tt.setupRepo(serviceRepo)
-			svc := service.NewServiceService(serviceRepo)
+			versionRepo := mocks.NewMockServiceVersionRepository()
+			svc := service.NewServiceService(serviceRepo, versionRepo)
 
 			ctx := context.Background()
 			err := svc.Delete(ctx, id)
@@ -454,7 +459,8 @@ func TestServiceService_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serviceRepo := mocks.NewMockServiceRepository()
 			tt.setupRepo(serviceRepo)
-			svc := service.NewServiceService(serviceRepo)
+			versionRepo := mocks.NewMockServiceVersionRepository()
+			svc := service.NewServiceService(serviceRepo, versionRepo)
 
 			ctx := context.Background()
 			result, err := svc.List(ctx, tt.params)

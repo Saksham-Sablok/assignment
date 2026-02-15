@@ -249,3 +249,136 @@ func (h *ServiceHandler) handleError(w http.ResponseWriter, err error) {
 
 	response.InternalServerError(w, "internal server error")
 }
+
+// VersionListResponse represents the response for listing service versions
+type VersionListResponse struct {
+	Data       []domain.ServiceVersionResponse `json:"data"`
+	Pagination domain.PaginationMetadata       `json:"pagination"`
+}
+
+// ListVersions handles GET /api/v1/services/{id}/versions
+// @Summary List all versions of a service
+// @Description Get a paginated list of all historical versions of a service
+// @Tags versions
+// @Accept json
+// @Produce json
+// @Param id path string true "Service ID (MongoDB ObjectID)"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page (max 100)" default(20)
+// @Success 200 {object} VersionListResponse "List of versions with pagination"
+// @Failure 400 {object} response.ErrorResponse "Invalid ID format"
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 404 {object} response.ErrorResponse "Service not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Security ApiKeyAuth
+// @Router /services/{id}/versions [get]
+func (h *ServiceHandler) ListVersions(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.BadRequest(w, "service id is required")
+		return
+	}
+
+	params := ParsePaginationParams(r)
+
+	result, err := h.service.GetVersions(r.Context(), id, params)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	// Convert to response format
+	versionResponses := make([]domain.ServiceVersionResponse, len(result.Data))
+	for i, v := range result.Data {
+		versionResponses[i] = v.ToResponse()
+	}
+
+	response.OK(w, map[string]interface{}{
+		"data":       versionResponses,
+		"pagination": result.Pagination,
+	})
+}
+
+// GetVersion handles GET /api/v1/services/{id}/versions/{revision}
+// @Summary Get a specific version of a service
+// @Description Get detailed information about a specific revision of a service
+// @Tags versions
+// @Accept json
+// @Produce json
+// @Param id path string true "Service ID (MongoDB ObjectID)"
+// @Param revision path int true "Revision number"
+// @Success 200 {object} domain.ServiceVersionResponse "Version details"
+// @Failure 400 {object} response.ErrorResponse "Invalid ID or revision format"
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 404 {object} response.ErrorResponse "Version not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Security ApiKeyAuth
+// @Router /services/{id}/versions/{revision} [get]
+func (h *ServiceHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.BadRequest(w, "service id is required")
+		return
+	}
+
+	revisionStr := chi.URLParam(r, "revision")
+	if revisionStr == "" {
+		response.BadRequest(w, "revision is required")
+		return
+	}
+
+	revision, err := parseRevision(revisionStr)
+	if err != nil {
+		response.BadRequest(w, "invalid revision format")
+		return
+	}
+
+	version, err := h.service.GetVersion(r.Context(), id, revision)
+	if err != nil {
+		h.handleVersionError(w, err)
+		return
+	}
+
+	response.OK(w, version.ToResponse())
+}
+
+// handleVersionError handles errors from the service layer for version endpoints
+func (h *ServiceHandler) handleVersionError(w http.ResponseWriter, err error) {
+	if errors.Is(err, domain.ErrNotFound) {
+		response.NotFound(w, "version not found")
+		return
+	}
+
+	if errors.Is(err, domain.ErrInvalidID) {
+		response.BadRequest(w, "invalid service id format")
+		return
+	}
+
+	response.InternalServerError(w, "internal server error")
+}
+
+// parseRevision parses a revision string to an integer
+func parseRevision(s string) (int, error) {
+	var revision int
+	_, err := parseIntParam(s, &revision)
+	if err != nil || revision < 1 {
+		return 0, errors.New("invalid revision")
+	}
+	return revision, nil
+}
+
+// parseIntParam is a helper to parse an integer parameter
+func parseIntParam(s string, result *int) (bool, error) {
+	if s == "" {
+		return false, nil
+	}
+	n := 0
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return true, errors.New("invalid integer")
+		}
+		n = n*10 + int(c-'0')
+	}
+	*result = n
+	return true, nil
+}
