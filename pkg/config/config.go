@@ -2,23 +2,33 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Config holds the application configuration
 type Config struct {
-	MongoURI string
-	APIKeys  []string
-	Port     string
-	DBName   string
+	MongoURI         string
+	APIKeys          []string
+	Port             string
+	DBName           string
+	JWTSecret        string
+	JWTAccessExpiry  time.Duration
+	JWTRefreshExpiry time.Duration
+	JWTIssuer        string
 }
 
 // Load reads configuration from environment variables
 func Load() *Config {
 	cfg := &Config{
-		MongoURI: getEnv("MONGODB_URI", "mongodb://localhost:27017"),
-		Port:     getEnv("PORT", "8080"),
-		DBName:   getEnv("DB_NAME", "services_db"),
+		MongoURI:         getEnv("MONGODB_URI", "mongodb://localhost:27017"),
+		Port:             getEnv("PORT", "8080"),
+		DBName:           getEnv("DB_NAME", "services_db"),
+		JWTSecret:        getEnv("JWT_SECRET", "your-super-secret-key-change-in-production"),
+		JWTAccessExpiry:  getDurationEnv("JWT_ACCESS_EXPIRY_MINUTES", 15) * time.Minute,
+		JWTRefreshExpiry: getDurationEnv("JWT_REFRESH_EXPIRY_HOURS", 24*7) * time.Hour,
+		JWTIssuer:        getEnv("JWT_ISSUER", "services-api"),
 	}
 
 	// Parse comma-separated API keys
@@ -40,6 +50,16 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// getDurationEnv returns an environment variable as time.Duration or a default
+func getDurationEnv(key string, defaultValue int) time.Duration {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return time.Duration(intVal)
+		}
+	}
+	return time.Duration(defaultValue)
 }
 
 // HasAPIKeys returns true if API keys are configured
