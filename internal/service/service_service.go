@@ -11,14 +11,12 @@ import (
 // ServiceService handles business logic for services
 type ServiceService struct {
 	serviceRepo domain.ServiceRepository
-	versionRepo domain.VersionRepository
 }
 
 // NewServiceService creates a new ServiceService
-func NewServiceService(serviceRepo domain.ServiceRepository, versionRepo domain.VersionRepository) *ServiceService {
+func NewServiceService(serviceRepo domain.ServiceRepository) *ServiceService {
 	return &ServiceService{
 		serviceRepo: serviceRepo,
-		versionRepo: versionRepo,
 	}
 }
 
@@ -46,7 +44,7 @@ func (s *ServiceService) GetByID(ctx context.Context, id string) (*domain.Servic
 	return s.serviceRepo.GetByID(ctx, id)
 }
 
-// Update performs a full update of a service
+// Update performs a full update of a service (increments revision)
 func (s *ServiceService) Update(ctx context.Context, id string, req domain.UpdateServiceRequest) (*domain.Service, error) {
 	// Validate request
 	if err := validateUpdateServiceRequest(req); err != nil {
@@ -67,11 +65,11 @@ func (s *ServiceService) Update(ctx context.Context, id string, req domain.Updat
 		return nil, err
 	}
 
-	// Re-fetch to get updated timestamps
+	// Re-fetch to get updated timestamps and revision
 	return s.serviceRepo.GetByID(ctx, id)
 }
 
-// Patch performs a partial update of a service
+// Patch performs a partial update of a service (increments revision)
 func (s *ServiceService) Patch(ctx context.Context, id string, req domain.PatchServiceRequest) (*domain.Service, error) {
 	// Get existing service
 	service, err := s.serviceRepo.GetByID(ctx, id)
@@ -104,11 +102,11 @@ func (s *ServiceService) Patch(ctx context.Context, id string, req domain.PatchS
 		return nil, err
 	}
 
-	// Re-fetch to get updated timestamps
+	// Re-fetch to get updated timestamps and revision
 	return s.serviceRepo.GetByID(ctx, id)
 }
 
-// Delete deletes a service and all its versions
+// Delete deletes a service
 func (s *ServiceService) Delete(ctx context.Context, id string) error {
 	// Validate ID format
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
@@ -192,7 +190,6 @@ func IsValidationError(err error) bool {
 		errors.Is(err, domain.ErrDescriptionRequired) ||
 		errors.Is(err, domain.ErrNameTooLong) ||
 		errors.Is(err, domain.ErrDescriptionTooLong) ||
-		errors.Is(err, domain.ErrVersionRequired) ||
 		errors.Is(err, domain.ErrInvalidSortField) ||
 		errors.Is(err, domain.ErrInvalidID)
 }

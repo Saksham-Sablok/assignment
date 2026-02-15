@@ -14,12 +14,11 @@ import (
 func NewRouter(
 	cfg *config.Config,
 	serviceHandler *ServiceHandler,
-	versionHandler *VersionHandler,
 	healthHandler *HealthHandler,
 ) http.Handler {
 	r := chi.NewRouter()
 
-	// 7.1 Configure Chi router with middleware (logging, recovery, CORS)
+	// Configure Chi router with middleware (logging, recovery, CORS)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
@@ -35,18 +34,17 @@ func NewRouter(
 		MaxAge:           300,
 	}))
 
-	// 7.2 Register health endpoint (no auth)
+	// Register health endpoint (no auth)
 	r.Get("/health", healthHandler.Check)
 
 	// Create auth middleware
 	authMiddleware := auth.NewMiddleware(cfg)
 
-	// 7.3 Register /api/v1 routes with auth middleware
+	// Register /api/v1 routes with auth middleware
 	r.Route("/api/v1", func(r chi.Router) {
 		// Apply auth middleware to all /api/v1 routes
 		r.Use(authMiddleware.Authenticate)
 
-		// 7.4 Wire up all service and version handlers
 		// Service routes
 		r.Route("/services", func(r chi.Router) {
 			r.Post("/", serviceHandler.Create)
@@ -57,17 +55,6 @@ func NewRouter(
 				r.Put("/", serviceHandler.Update)
 				r.Patch("/", serviceHandler.Patch)
 				r.Delete("/", serviceHandler.Delete)
-			})
-
-			// Version routes (nested under services)
-			r.Route("/{service_id}/versions", func(r chi.Router) {
-				r.Post("/", versionHandler.Create)
-				r.Get("/", versionHandler.List)
-
-				r.Route("/{version_id}", func(r chi.Router) {
-					r.Get("/", versionHandler.Get)
-					r.Delete("/", versionHandler.Delete)
-				})
 			})
 		})
 	})
